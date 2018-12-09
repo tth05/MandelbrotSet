@@ -23,13 +23,12 @@ public class Main extends ApplicationAdapter {
 	public static final int WIDTH = 1000;
 	public static final int HEIGHT = 1000;
 	//Float to prevent integer division
-	private final float THREADS = /*Runtime.getRuntime().availableProcessors()*/9;
-
+	private final float THREADS = (float) Math.pow(Math.round(Math.sqrt(Runtime.getRuntime().availableProcessors())), 2);
 	private final ExecutorService pool = Executors.newCachedThreadPool();
 
 	@Override
 	public void create() {
-		System.out.println(Runtime.getRuntime().availableProcessors());
+		System.out.println(THREADS);
 		img = new Sprite(new Texture(new Pixmap(WIDTH, HEIGHT, Pixmap.Format.RGBA8888)));
 		img.setSize(WIDTH, HEIGHT);
 		img.setPosition(0, 0);
@@ -40,8 +39,8 @@ public class Main extends ApplicationAdapter {
 
 		batch = new SpriteBatch();
 
-//		Gdx.graphics.setContinuousRendering(false);
-//		Gdx.graphics.requestRendering();
+		Gdx.graphics.setContinuousRendering(false);
+		Gdx.graphics.requestRendering();
 	}
 
 	int i = 0;
@@ -50,12 +49,8 @@ public class Main extends ApplicationAdapter {
 	public void render() {
 		handleInput();
 
-//		i++;
-//		if (i == 2) {
 		updateMandelbrotSet();
-//		}
 
-//		i %= 3;
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		batch.begin();
 		img.draw(batch);
@@ -116,7 +111,6 @@ public class Main extends ApplicationAdapter {
 		}
 	}
 
-	//-0.5689999999999987, -0.568000000000002
 	//Used for mandelbrotset
 	private double minY = -1.5;
 	private double minX = -2;
@@ -131,41 +125,42 @@ public class Main extends ApplicationAdapter {
 	private final int size = (int) Math.round(Math.sqrt((WIDTH * HEIGHT) / THREADS));
 
 	public void updateMandelbrotSet() {
-		//TODO: Use any amount threads
-//		int row = 0;
-//		int col = 0;
-//		for (int x = 0; x < WIDTH; x += size) {
-//			for (int y = 0; y < HEIGHT; y += size) {
-//				drawSubPixmap(
-//						x,
-//						y,
-//						size,
-//						size,
-//						minX + (double)col * ((Math.abs(minX) + Math.abs(maxX)) / 3d),
-//						minY + (double)row * ((Math.abs(minY) + Math.abs(maxY)) / 3d),
-//						minX + (col + 1d) * ((Math.abs(minX) + Math.abs(maxX)) / 3d),
-//						minY + (row + 1d) * ((Math.abs(minY) + Math.abs(maxY)) / 3d),
-//						list);
-//				row++;
-//			}
-//			col++;
-//		}
+		double divider = Math.sqrt(THREADS);
+		int row = 0;
+		int col = 0;
+		for (int x = 0; x < WIDTH -10; x += size) {
+			for (int y = 0; y < HEIGHT - 10; y += size) {
+				drawSubPixmap(
+						x,
+						y,
+						size,
+						size,
+						minX + col * ((maxX - minX) / divider),
+						minY + row * ((maxY - minY) / divider),
+						minX + (col + 1) * ((maxX - minX) / divider),
+						minY + (row + 1) * ((maxY - minY) / divider),
+						list);
+				row++;
+			}
+			row = 0;
+			col++;
+		}
 
 
 		//4 Threads
 		//Top left
-		drawSubPixmap(0, 0, WIDTH / 2, HEIGHT / 2, minX, minY, (minX + maxX) / 2, (minY + maxY) / 2, list);
+//		drawSubPixmap(0, 0, WIDTH / 2, HEIGHT / 2, minX, minY, (minX + maxX) / 2, (minY + maxY) / 2, list);
 		//Top right
-		drawSubPixmap(WIDTH / 2, 0, WIDTH / 2, HEIGHT / 2, (minX + maxX) / 2, minY, maxX, (minY + maxY) / 2, list);
+//		drawSubPixmap(WIDTH / 2, 0, WIDTH / 2, HEIGHT / 2, (minX + maxX) / 2, minY, maxX, (minY + maxY) / 2, list);
 		//Bottom left
-		drawSubPixmap(0, HEIGHT / 2, WIDTH / 2, HEIGHT / 2, minX, (minY + maxY) / 2, (minX + maxX) / 2, maxY, list);
+//		drawSubPixmap(0, HEIGHT / 2, WIDTH / 2, HEIGHT / 2, minX, (minY + maxY) / 2, (minX + maxX) / 2, maxY, list);
 //		Bottom right
-		drawSubPixmap(WIDTH / 2, HEIGHT / 2, WIDTH / 2, HEIGHT / 2, (minX + maxX) / 2, (minY + maxY) / 2, maxX, maxY, list);
+//		drawSubPixmap(WIDTH / 2, HEIGHT / 2, WIDTH / 2, HEIGHT / 2, (minX + maxX) / 2, (minY + maxY) / 2, maxX, maxY, list);
 
 		//1 Thread
 //		drawSubPixmap(0, 0, WIDTH, HEIGHT, minX, minY, maxX, maxY, list);
 
-		while (list.size() < 4) {
+		while (list.size() < THREADS) {
 			try {
 				Thread.sleep(5);
 			} catch (InterruptedException e) {
@@ -177,7 +172,6 @@ public class Main extends ApplicationAdapter {
 			p.getValue().dispose();
 		});
 		list.clear();
-//		return pixmap;
 	}
 
 	public void drawSubPixmap(int startX, int startY, final int width, final int height, final double minX, final double minY, final double maxX, final double maxY, List<Pair<Point, Pixmap>> finished) {
