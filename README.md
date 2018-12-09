@@ -1,1 +1,1 @@
-"# MandelbrotSet" 
+# MandelbrotSet
