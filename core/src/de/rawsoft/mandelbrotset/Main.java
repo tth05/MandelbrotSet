@@ -23,7 +23,7 @@ public class Main extends ApplicationAdapter {
 	public static final int WIDTH = 1000;
 	public static final int HEIGHT = 1000;
 	//Float to prevent integer division
-	private final float THREADS = (float) Math.pow(Math.round(Math.sqrt(Runtime.getRuntime().availableProcessors())), 2);
+	private final float THREADS = /*(float) Math.pow(Math.round(Math.sqrt(Runtime.getRuntime().availableProcessors())), 2)*/400;
 	private final ExecutorService pool = Executors.newCachedThreadPool();
 
 	@Override
@@ -207,7 +207,7 @@ public class Main extends ApplicationAdapter {
 //						pixmap.setColor(1f, 1f, 1f, brightness);
 //					}
 					float hue = (float) map(n, 0, iterations, 0, 255);
-					pixmap.setColor(Color.HSBtoRGB(hue, 1f, n == iterations ? 0f : 1f));
+					pixmap.setColor(Color.HSBtoRGB(hue, n == iterations ? 1f : 0.8f, 1f));
 					pixmap.drawPixel(x, y);
 				}
 			}
