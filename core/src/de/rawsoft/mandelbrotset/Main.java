@@ -23,8 +23,8 @@ public class Main extends ApplicationAdapter {
 	public static final int WIDTH = 1000;
 	public static final int HEIGHT = 1000;
 	//Float to prevent integer division
-	private final float THREADS = /*(float) Math.pow(Math.round(Math.sqrt(Runtime.getRuntime().availableProcessors())), 2)*/400;
-	private final ExecutorService pool = Executors.newCachedThreadPool();
+	private final float THREADS = /*(float) Math.pow(Math.round(Math.sqrt(Runtime.getRuntime().availableProcessors())), 2)*/196;
+	private final ExecutorService pool = Executors.newFixedThreadPool((int) THREADS);
 
 	@Override
 	public void create() {
@@ -116,7 +116,7 @@ public class Main extends ApplicationAdapter {
 	private double minX = -2;
 	private double maxX = 1;
 	private double maxY = 1.5;
-	private int iterations = 1000;
+	private int iterations = 5000;
 
 	//List of pixmaps from each thread
 	private final List<Pair<Point, Pixmap>> list = new CopyOnWriteArrayList<>();
