@@ -1,8 +1,8 @@
-package de.rawsoft.mandelbrotset.desktop;
+package com.github.tth05.mandelbrotset.desktop;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import de.rawsoft.mandelbrotset.Main;
+import com.github.tth05.mandelbrotset.Main;
 
 public class DesktopLauncher {
 	public static void main (String[] arg) {

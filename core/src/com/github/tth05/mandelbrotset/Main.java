@@ -1,4 +1,4 @@
-package de.rawsoft.mandelbrotset;
+package com.github.tth05.mandelbrotset;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
@@ -29,7 +29,6 @@ public class Main extends ApplicationAdapter {
 
 	@Override
 	public void create() {
-		System.out.println(THREADS);
 		img = new Sprite(new Texture(new Pixmap(WIDTH, HEIGHT, Pixmap.Format.RGBA8888)));
 		img.setSize(WIDTH, HEIGHT);
 		img.setPosition(0, 0);
