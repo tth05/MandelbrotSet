@@ -14,6 +14,7 @@ import java.awt.Color;
 import java.awt.Point;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -23,7 +24,7 @@ public class Main extends ApplicationAdapter {
 	public static final int WIDTH = 1000;
 	public static final int HEIGHT = 1000;
 	//Float to prevent integer division
-	private final float THREADS = /*(float) Math.pow(Math.round(Math.sqrt(Runtime.getRuntime().availableProcessors())), 2)*/196;
+	private final float THREADS = /*(float) Math.pow(Math.round(Math.sqrt(Runtime.getRuntime().availableProcessors())), 2)*/400;
 	private final ExecutorService pool = Executors.newFixedThreadPool((int) THREADS);
 
 	@Override
@@ -43,13 +44,18 @@ public class Main extends ApplicationAdapter {
 		Gdx.graphics.requestRendering();
 	}
 
-	int i = 0;
+	double i = 0;
+	double r = 0;
 
 	@Override
 	public void render() {
 		handleInput();
 
+		long time = System.currentTimeMillis();
 		updateMandelbrotSet();
+		i++;
+		r += (System.currentTimeMillis() - time) / 1000d;
+		System.out.println(r / i);
 
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		batch.begin();
@@ -116,7 +122,7 @@ public class Main extends ApplicationAdapter {
 	private double minX = -2;
 	private double maxX = 1;
 	private double maxY = 1.5;
-	private int iterations = 5000;
+	private final int iterations = 5000;
 
 	//List of pixmaps from each thread
 	private final List<Pair<Point, Pixmap>> list = new CopyOnWriteArrayList<>();
@@ -125,10 +131,12 @@ public class Main extends ApplicationAdapter {
 	private final int size = (int) Math.round(Math.sqrt((WIDTH * HEIGHT) / THREADS));
 
 	public void updateMandelbrotSet() {
+		CountDownLatch latch = new CountDownLatch((int) THREADS);
+
 		double divider = Math.sqrt(THREADS);
 		int row = 0;
 		int col = 0;
-		for (int x = 0; x < WIDTH -10; x += size) {
+		for (int x = 0; x < WIDTH - 10; x += size) {
 			for (int y = 0; y < HEIGHT - 10; y += size) {
 				drawSubPixmap(
 						x,
@@ -139,42 +147,30 @@ public class Main extends ApplicationAdapter {
 						minY + row * ((maxY - minY) / divider),
 						minX + (col + 1) * ((maxX - minX) / divider),
 						minY + (row + 1) * ((maxY - minY) / divider),
-						list);
+						list, latch);
 				row++;
 			}
 			row = 0;
 			col++;
 		}
 
-
-		//4 Threads
-		//Top left
-//		drawSubPixmap(0, 0, WIDTH / 2, HEIGHT / 2, minX, minY, (minX + maxX) / 2, (minY + maxY) / 2, list);
-		//Top right
-//		drawSubPixmap(WIDTH / 2, 0, WIDTH / 2, HEIGHT / 2, (minX + maxX) / 2, minY, maxX, (minY + maxY) / 2, list);
-		//Bottom left
-//		drawSubPixmap(0, HEIGHT / 2, WIDTH / 2, HEIGHT / 2, minX, (minY + maxY) / 2, (minX + maxX) / 2, maxY, list);
-//		Bottom right
-//		drawSubPixmap(WIDTH / 2, HEIGHT / 2, WIDTH / 2, HEIGHT / 2, (minX + maxX) / 2, (minY + maxY) / 2, maxX, maxY, list);
-
-		//1 Thread
-//		drawSubPixmap(0, 0, WIDTH, HEIGHT, minX, minY, maxX, maxY, list);
-
-		while (list.size() < THREADS) {
-			try {
-				Thread.sleep(5);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+		try {
+			latch.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
+
 		list.forEach((p) -> {
 			img.getTexture().draw(p.getValue(), p.getKey().x, p.getKey().y);
+			//Comment out to make it even faster
 			p.getValue().dispose();
 		});
 		list.clear();
 	}
 
-	public void drawSubPixmap(int startX, int startY, final int width, final int height, final double minX, final double minY, final double maxX, final double maxY, List<Pair<Point, Pixmap>> finished) {
+	public void drawSubPixmap(int startX, int startY, final int width, final int height, final double minX,
+							  final double minY, final double maxX, final double maxY,
+							  List<Pair<Point, Pixmap>> finished, CountDownLatch latch) {
 		pool.execute(() -> {
 			Pixmap pixmap = new Pixmap(width, height, Pixmap.Format.RGBA8888);
 			for (int x = 0; x < width; x++) {
@@ -207,11 +203,14 @@ public class Main extends ApplicationAdapter {
 //						pixmap.setColor(1f, 1f, 1f, brightness);
 //					}
 					float hue = (float) map(n, 0, iterations, 0, 255);
-					pixmap.setColor(Color.HSBtoRGB(hue, n == iterations ? 1f : 0.8f, 1f));
+					pixmap.setColor(Color.HSBtoRGB(hue, n == iterations ?
+							1f :
+							0.8f, 1f));
 					pixmap.drawPixel(x, y);
 				}
 			}
 			finished.add(new Pair<>(new Point(startX, startY), pixmap));
+			latch.countDown();
 		});
 	}
 
