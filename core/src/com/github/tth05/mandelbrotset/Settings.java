@@ -6,7 +6,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public class Settings {
 
-    public static int iterations = 1000;
+    public static int iterations = 10000;
     public static int width = 1000;
     public static int height = 1000;
     public static int numThreads = 400;
